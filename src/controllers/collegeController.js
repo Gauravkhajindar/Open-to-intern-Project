@@ -5,7 +5,7 @@ const internModel = require('../model/internModel')
 
 const regEx = /^[a-zA-Z ]*$/;
 const regEx1 = /[a-zAa-z\,]+[0-9]?/
-const regexlogolink = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%.\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%\+.~#?&//=]*)/
+const regexlogolink = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%.\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%\+.~#?&//=]*)(jpg|jpeg|png)/
 
 const isValidation = function (value) {
     if (typeof value == 'undefined' || value == null) return false
@@ -32,7 +32,7 @@ const createCollege = async function (req, res) {
         }
 
         const SearchName = await collegeModel.findOne({ name: name })
-        if (SearchName) return res.status(400).send({ status: false, msg: "name must be unique" })
+        if (SearchName) return res.status(409).send({ status: false, msg: "name must be unique" })
 
         if (!fullName) return res.status(400).send({ status: false, message: 'fullname must be present' })
         if (!isValidation(fullName)) return res.status(400).send({ status: false, message: 'fullName should be valid' })
@@ -64,9 +64,10 @@ const collegeDetails = async (req, res) => {
             return res.status(400).send({ status: false, msg: "Invalid request Please provide valid details in Query" });
         }
 
-        const collegeDetails = await collegeModel.findOne({ name: collegeName })
+
+        const collegeDetails = await collegeModel.findOne({ name: collegeName ,isDeleted:false})
         if (!collegeDetails) return res.status(404).send({ status: false, msg: "College doesn't exist" })
-        let interns = await internModel.find({ collegeId: collegeDetails._id }).select({ name: 1, email: 1, mobile: 1 })
+        let interns = await internModel.find({ collegeId: collegeDetails._id ,isDeleted:false }).select({ name: 1, email: 1, mobile: 1 })
 
         let data = { name: collegeDetails.name, fullName: collegeDetails.fullName, logoLink: collegeDetails.logoLink, interns: interns }
         res.status(200).send({ status: true, data: data })
